@@ -1,0 +1,100 @@
+---
+title: "hw03-MaunishUBC"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Homework 03: Using dplyr/ggplot2 to manipulate and explore data
+
+
+### Installing gapminder and tidyverse
+```{r  warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(kableExtra)
+```
+
+### Task 1: Get the maximum and minimum GDP per capita for all continents
+```{r}
+max_min_gdpPercap <- gapminder %>% 
+  group_by(continent) %>% 
+  summarise(max_gdpPercap = max(gdpPercap), min_gdpPercap = min(gdpPercap))
+
+max_min_gdpPercap %>% kable() %>% 
+  kable_styling()
+
+
+```
+```{r}
+gapminder %>% 
+  ggplot(aes(continent, gdpPercap, colour = continent)) +
+  scale_y_log10() +
+  geom_violin() +
+  geom_jitter(alpha = 0.2)
+```
+
+It is clear that Asia has the higher spread in gdpPercap
+
+### Task 2: Look at the spread of GDP per capita (gdpPercap) within the continents
+
+Best way to do this would be to use histograms for the GDP separately for each continent 
+```{r}
+gapminder %>% 
+  ggplot(aes(gdpPercap)) +
+  geom_histogram(bins = 50, aes(colour = continent)) + 
+  scale_x_log10() + 
+  facet_wrap(~ continent)
+```
+
+Also useful, would be to calculate the standard deviation of the gdpPercap for each of the continents
+
+```{r}
+gapminder %>% 
+  group_by(continent) %>% 
+  summarise(spread = sd(gdpPercap)) %>% 
+  kable() %>% 
+  kable_styling()
+  
+```
+Asia has the highest spread in GDP per cap.
+
+### Compute a weighted mean (weighting by population) of life expectancy for different years. 
+
+```{r}
+gapminder_weighted <- gapminder %>% 
+  mutate(life_exp_wt = lifeExp/log(pop)) 
+
+gapminder_weighted %>% 
+  group_by(country) %>% 
+  summarize(weighted_mean = mean(life_exp_wt)) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+So, what does the weighted mean spread look like?
+
+```{r}
+gapminder_weighted %>% 
+  ggplot(aes(life_exp_wt)) +
+  geom_histogram(bins =50, aes(fill = continent))
+```
+```{r}
+filter(gapminder_weighted, life_exp_wt > 6) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+```{r}
+filter(gapminder_weighted, life_exp_wt < 2) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+It is interesting that in case of the highest weighted mean the parameter is skewed towards country with a really small population (Iceland)
+
+Whereas in case of the smallest values it is mostly from the 1950s and from medium and large poor countries. 
+
+
